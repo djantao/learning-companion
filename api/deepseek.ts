@@ -1,5 +1,6 @@
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions'
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const API_TIMEOUT = 25000
+const MODEL = 'deepseek/deepseek-chat'
 
 async function fetchWithTimeout(url: string, options: RequestInit, timeout: number = API_TIMEOUT): Promise<Response> {
   const controller = new AbortController()
@@ -13,6 +14,15 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout: numb
     return response
   } finally {
     clearTimeout(timeoutId)
+  }
+}
+
+function getHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+    'HTTP-Referer': 'https://learning-companion-nine.vercel.app',
+    'X-Title': 'Learning Companion'
   }
 }
 
@@ -47,14 +57,11 @@ export async function generateLearningPlan(topic: string, level: string, hoursPe
 
 只返回JSON，不要其他文字。`
 
-  const response = await fetchWithTimeout(DEEPSEEK_API_URL, {
+  const response = await fetchWithTimeout(OPENROUTER_API_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-    },
+    headers: getHeaders(),
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 2000
@@ -62,7 +69,7 @@ export async function generateLearningPlan(topic: string, level: string, hoursPe
   })
 
   if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.status}`)
+    throw new Error(`OpenRouter API error: ${response.status}`)
   }
 
   const data = await response.json()
@@ -112,14 +119,11 @@ export async function explainConcept(concept: string, context: string, style: st
 
 只返回JSON，不要其他文字。`
 
-  const response = await fetchWithTimeout(DEEPSEEK_API_URL, {
+  const response = await fetchWithTimeout(OPENROUTER_API_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-    },
+    headers: getHeaders(),
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 2000
@@ -127,7 +131,7 @@ export async function explainConcept(concept: string, context: string, style: st
   })
 
   if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.status}`)
+    throw new Error(`OpenRouter API error: ${response.status}`)
   }
 
   const data = await response.json()
@@ -177,14 +181,11 @@ export async function generateExercises(topic: string, difficulty: string, count
 
 只返回JSON，不要其他文字。`
 
-  const response = await fetchWithTimeout(DEEPSEEK_API_URL, {
+  const response = await fetchWithTimeout(OPENROUTER_API_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-    },
+    headers: getHeaders(),
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 3000
@@ -192,7 +193,7 @@ export async function generateExercises(topic: string, difficulty: string, count
   })
 
   if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.status}`)
+    throw new Error(`OpenRouter API error: ${response.status}`)
   }
 
   const data = await response.json()
