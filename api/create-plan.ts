@@ -1,4 +1,5 @@
 import { Client } from '@notionhq/client'
+import { generateLearningPlan } from './deepseek'
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN })
 
@@ -17,7 +18,17 @@ export default async function handler(req, res) {
   try {
     const { topic, hoursPerWeek, level } = req.body
     
-    const totalWeeks = Math.ceil(40 / hoursPerWeek) * 2
+    let planData
+    try {
+      planData = await generateLearningPlan(topic, level, hoursPerWeek)
+    } catch (error) {
+      console.error('DeepSeek API error:', error)
+      planData = {
+        totalWeeks: Math.ceil(40 / hoursPerWeek),
+        weeklySchedule: [],
+        milestones: []
+      }
+    }
     
     const response = await notion.pages.create({
       parent: { database_id: DATABASES.plans },
@@ -35,11 +46,12 @@ export default async function handler(req, res) {
       success: true,
       planId: response.id,
       topic,
-      totalWeeks,
+      totalWeeks: planData.totalWeeks,
+      weeklySchedule: planData.weeklySchedule,
       notionUrl: `https://www.notion.so/${response.id.replace(/-/g, '')}`
     })
   } catch (error) {
-    console.error(error)
+    console.error('Create plan error:', error)
     res.status(500).json({ error: error.message })
   }
 }
