@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BookOpen, Lightbulb, PenTool, BarChart3, Menu, X, ChevronRight, Clock, Target, GraduationCap, MessageCircle, CheckCircle } from 'lucide-react'
+import { BookOpen, PenTool, BarChart3, Menu, X, ChevronRight, Clock, Target, GraduationCap, MessageCircle, CheckCircle } from 'lucide-react'
 
 type Page = 'home' | 'plan' | 'feynman' | 'exercise' | 'progress' | 'stats'
 
