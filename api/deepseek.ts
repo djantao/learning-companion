@@ -1,6 +1,6 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const API_TIMEOUT = 25000
-const MODEL = 'deepseek/deepseek-chat'
+const MODEL = 'stepfun/step-3.5-flash:free'
 
 async function fetchWithTimeout(url: string, options: RequestInit, timeout: number = API_TIMEOUT): Promise<Response> {
   const controller = new AbortController()

@@ -645,6 +645,267 @@ h2 {
   font-size: 0.85rem;
 }
 
+.page-desc {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.feynman-steps {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+}
+
+.feynman-steps h4 {
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.feynman-explain,
+.feynman-analyze,
+.feynman-complete {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.concept-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.round-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+}
+
+.guidance-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.guidance-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.guidance-card p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.btn-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-group .btn-primary,
+.btn-group .btn-secondary {
+  flex: 1;
+}
+
+.analysis-section {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.analysis-section.strengths {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.analysis-section.gaps {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.analysis-section.questions {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.analysis-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.analysis-section ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.analysis-section li {
+  margin-bottom: 0.5rem;
+}
+
+.encouragement {
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.encouragement p {
+  margin: 0;
+  font-style: italic;
+  color: var(--text);
+}
+
+.complete-header {
+  text-align: center;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.complete-icon {
+  color: var(--success);
+  margin-bottom: 1rem;
+}
+
+.complete-header h3 {
+  color: var(--success);
+  margin-bottom: 0.5rem;
+}
+
+.complete-header p {
+  color: var(--text-muted);
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card h4 {
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.summary-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.summary-section strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.summary-section ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.summary-section li {
+  margin-bottom: 0.25rem;
+}
+
+.related-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.mastery-level {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.mastery-level .level {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.mastery-level .level.beginner {
+  background: rgba(251, 191, 36, 0.2);
+  color: #f59e0b;
+}
+
+.mastery-level .level.intermediate {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--primary);
+}
+
+.mastery-level .level.advanced {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+}
+
 .footer {
   background: var(--bg-card);
   border-top: 1px solid var(--border);

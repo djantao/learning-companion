@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { BookOpen, Lightbulb, PenTool, BarChart3, Menu, X, ChevronRight, Clock, Target } from 'lucide-react'
+import { BookOpen, Lightbulb, PenTool, BarChart3, Menu, X, ChevronRight, Clock, Target, GraduationCap, MessageCircle, CheckCircle } from 'lucide-react'
 
-type Page = 'home' | 'plan' | 'explain' | 'exercise' | 'progress' | 'stats'
+type Page = 'home' | 'plan' | 'feynman' | 'exercise' | 'progress' | 'stats'
 
 interface WeeklySchedule {
   week: number
@@ -41,10 +41,10 @@ function App() {
   const navItems = [
     { id: 'home' as Page, label: '首页', icon: BookOpen },
     { id: 'plan' as Page, label: '学习计划', icon: BookOpen },
-    { id: 'explain' as Page, label: '概念讲解', icon: Lightbulb },
+    { id: 'feynman' as Page, label: '费曼学习', icon: GraduationCap },
     { id: 'exercise' as Page, label: '练习题', icon: PenTool },
     { id: 'progress' as Page, label: '记录进度', icon: BarChart3 },
-    { id: 'stats' as Page, label: '学习统计', icon: BarChart3 },
+    { id: 'stats' as Page, label: '学习库', icon: BarChart3 },
   ]
 
   return (
@@ -79,7 +79,7 @@ function App() {
       <main className="main">
         {currentPage === 'home' && <HomePage onNavigate={setCurrentPage} currentPlan={currentPlan} />}
         {currentPage === 'plan' && <PlanPage onSavePlan={savePlan} currentPlan={currentPlan} />}
-        {currentPage === 'explain' && <ExplainPage currentPlan={currentPlan} />}
+        {currentPage === 'feynman' && <FeynmanPage currentPlan={currentPlan} />}
         {currentPage === 'exercise' && <ExercisePage currentPlan={currentPlan} />}
         {currentPage === 'progress' && <ProgressPage />}
         {currentPage === 'stats' && <StatsPage />}
@@ -95,9 +95,9 @@ function App() {
 function HomePage({ onNavigate, currentPlan }: { onNavigate: (page: Page) => void; currentPlan: LearningPlan | null }) {
   const features = [
     { icon: BookOpen, title: '创建学习计划', desc: '输入学习目标，AI生成个性化计划', page: 'plan' as Page },
-    { icon: Lightbulb, title: '概念讲解', desc: '不懂就问，AI详细讲解知识点', page: 'explain' as Page },
+    { icon: GraduationCap, title: '费曼学习法', desc: '用教别人的方式学习，深度理解', page: 'feynman' as Page },
     { icon: PenTool, title: '生成练习题', desc: '针对性练习，巩固学习成果', page: 'exercise' as Page },
-    { icon: BarChart3, title: '记录进度', desc: '记录学习时长和心得', page: 'progress' as Page },
+    { icon: BarChart3, title: '我的知识库', desc: '查看学习记录和知识总结', page: 'stats' as Page },
   ]
 
   return (
@@ -310,34 +310,38 @@ function PlanPage({ onSavePlan, currentPlan }: { onSavePlan: (plan: LearningPlan
   )
 }
 
-function ExplainPage({ currentPlan }: { currentPlan: LearningPlan | null }) {
+function FeynmanPage({ currentPlan }: { currentPlan: LearningPlan | null }) {
   const [concept, setConcept] = useState('')
-  const [context, setContext] = useState('')
-  const [style, setStyle] = useState<'simple' | 'detailed' | 'analogy'>('simple')
+  const [stage, setStage] = useState<'input' | 'explain' | 'analyze' | 'complete'>('input')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [guidance, setGuidance] = useState('')
+  const [userExplanation, setUserExplanation] = useState('')
+  const [analysis, setAnalysis] = useState<any>(null)
+  const [summary, setSummary] = useState<any>(null)
+  const [round, setRound] = useState(0)
 
   const suggestedConcepts = currentPlan?.weeklySchedule?.flatMap(week => 
     week.objectives?.slice(0, 2) || []
   ).slice(0, 5) || []
 
-  const handleExplain = async (conceptToExplain?: string) => {
-    const targetConcept = conceptToExplain || concept
+  const handleStart = async (conceptToLearn?: string) => {
+    const targetConcept = conceptToLearn || concept
     if (!targetConcept.trim()) return
     
     setLoading(true)
     try {
-      const response = await fetch('/api/explain', {
+      const response = await fetch('/api/feynman', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          concept: targetConcept, 
-          context: context || currentPlan?.topic || '', 
-          style 
-        })
+        body: JSON.stringify({ concept: targetConcept, mode: 'start' })
       })
       const data = await response.json()
-      setResult(data)
+      if (data.success) {
+        setConcept(targetConcept)
+        setGuidance(data.guidance)
+        setStage('explain')
+        setRound(1)
+      }
     } catch (error) {
       console.error(error)
     } finally {
@@ -345,117 +349,297 @@ function ExplainPage({ currentPlan }: { currentPlan: LearningPlan | null }) {
     }
   }
 
+  const handleAnalyze = async () => {
+    if (!userExplanation.trim()) return
+    
+    setLoading(true)
+    try {
+      const response = await fetch('/api/feynman', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          concept, 
+          userExplanation, 
+          mode: 'analyze' 
+        })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setAnalysis(data.analysis)
+        setStage('analyze')
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleContinue = () => {
+    setUserExplanation('')
+    setAnalysis(null)
+    setStage('explain')
+    setRound(r => r + 1)
+  }
+
+  const handleComplete = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/feynman', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          concept, 
+          userExplanation, 
+          mode: 'summary' 
+        })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setSummary(data.summary)
+        setStage('complete')
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleReset = () => {
+    setConcept('')
+    setStage('input')
+    setGuidance('')
+    setUserExplanation('')
+    setAnalysis(null)
+    setSummary(null)
+    setRound(0)
+  }
+
   return (
     <div className="page">
-      <h2>概念讲解</h2>
+      <h2>🎓 费曼学习法</h2>
+      <p className="page-desc">用教别人的方式学习，真正理解知识</p>
 
-      {currentPlan && suggestedConcepts.length > 0 && (
-        <div className="suggested-section">
-          <h4>📌 根据你的学习计划推荐</h4>
-          <div className="suggested-concepts">
-            {suggestedConcepts.map((concept, i) => (
-              <button 
-                key={i} 
-                className="concept-chip"
-                onClick={() => handleExplain(concept)}
-              >
-                {concept}
-              </button>
-            ))}
+      {stage === 'input' && (
+        <>
+          {currentPlan && suggestedConcepts.length > 0 && (
+            <div className="suggested-section">
+              <h4>📌 根据你的学习计划推荐</h4>
+              <div className="suggested-concepts">
+                {suggestedConcepts.map((c, i) => (
+                  <button 
+                    key={i} 
+                    className="concept-chip"
+                    onClick={() => handleStart(c)}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="form-group">
+            <label>想学习的概念</label>
+            <input
+              type="text"
+              value={concept}
+              onChange={(e) => setConcept(e.target.value)}
+              placeholder="例如：闭包、LSM Tree、React Hooks"
+            />
+          </div>
+
+          <button 
+            className="btn-primary" 
+            onClick={() => handleStart()}
+            disabled={loading || !concept.trim()}
+          >
+            {loading ? '准备中...' : '开始学习'}
+          </button>
+
+          <div className="feynman-steps">
+            <h4>费曼学习法四步</h4>
+            <div className="steps-list">
+              <div className="step-item">
+                <span className="step-num">1</span>
+                <span>选择概念</span>
+              </div>
+              <div className="step-item">
+                <span className="step-num">2</span>
+                <span>用自己的话解释</span>
+              </div>
+              <div className="step-item">
+                <span className="step-num">3</span>
+                <span>发现理解漏洞</span>
+              </div>
+              <div className="step-item">
+                <span className="step-num">4</span>
+                <span>回顾并简化</span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {stage === 'explain' && (
+        <div className="feynman-explain">
+          <div className="concept-badge">
+            <GraduationCap size={20} />
+            <span>正在学习：{concept}</span>
+            <span className="round-badge">第{round}轮</span>
+          </div>
+
+          <div className="guidance-card">
+            <MessageCircle size={24} className="guidance-icon" />
+            <p>{guidance}</p>
+          </div>
+
+          <div className="form-group">
+            <label>用你自己的话解释这个概念：</label>
+            <textarea
+              value={userExplanation}
+              onChange={(e) => setUserExplanation(e.target.value)}
+              placeholder="想象你在向一个完全不懂这个领域的人解释..."
+              rows={6}
+            />
+          </div>
+
+          <div className="btn-group">
+            <button 
+              className="btn-primary" 
+              onClick={handleAnalyze}
+              disabled={loading || !userExplanation.trim()}
+            >
+              {loading ? '分析中...' : '提交解释'}
+            </button>
+            <button className="btn-secondary" onClick={handleReset}>
+              重新开始
+            </button>
           </div>
         </div>
       )}
-      
-      <div className="form-group">
-        <label>想了解的概念</label>
-        <input
-          type="text"
-          value={concept}
-          onChange={(e) => setConcept(e.target.value)}
-          placeholder="例如：闭包、LSM Tree、React Hooks"
-        />
-      </div>
 
-      <div className="form-group">
-        <label>背景上下文（可选）</label>
-        <input
-          type="text"
-          value={context}
-          onChange={(e) => setContext(e.target.value)}
-          placeholder={currentPlan ? `当前学习：${currentPlan.topic}` : "例如：JavaScript、数据结构"}
-        />
-      </div>
+      {stage === 'analyze' && analysis && (
+        <div className="feynman-analyze">
+          <div className="concept-badge">
+            <GraduationCap size={20} />
+            <span>正在学习：{concept}</span>
+            <span className="round-badge">第{round}轮</span>
+          </div>
 
-      <div className="form-group">
-        <label>讲解风格</label>
-        <div className="radio-group">
-          {[
-            { value: 'simple', label: '简洁' },
-            { value: 'detailed', label: '详细' },
-            { value: 'analogy', label: '类比' },
-          ].map(item => (
-            <label key={item.value} className="radio-label">
-              <input
-                type="radio"
-                name="style"
-                value={item.value}
-                checked={style === item.value}
-                onChange={() => setStyle(item.value as any)}
-              />
-              {item.label}
-            </label>
-          ))}
+          {analysis.strengths?.length > 0 && (
+            <div className="analysis-section strengths">
+              <h4><CheckCircle size={18} /> 理解得好的地方</h4>
+              <ul>
+                {analysis.strengths.map((s: string, i: number) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {analysis.gaps?.length > 0 && (
+            <div className="analysis-section gaps">
+              <h4>🤔 可能需要深入的地方</h4>
+              <ul>
+                {analysis.gaps.map((g: string, i: number) => (
+                  <li key={i}>{g}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {analysis.questions?.length > 0 && (
+            <div className="analysis-section questions">
+              <h4>💡 思考这些问题</h4>
+              <ul>
+                {analysis.questions.map((q: string, i: number) => (
+                  <li key={i}>{q}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="encouragement">
+            <p>{analysis.encouragement}</p>
+          </div>
+
+          <div className="btn-group">
+            <button className="btn-primary" onClick={handleContinue}>
+              继续完善解释
+            </button>
+            <button className="btn-secondary" onClick={handleComplete}>
+              完成学习
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      <button 
-        className="btn-primary" 
-        onClick={() => handleExplain()}
-        disabled={loading || !concept.trim()}
-      >
-        {loading ? '讲解中...' : '开始讲解'}
-      </button>
+      {stage === 'complete' && summary && (
+        <div className="feynman-complete">
+          <div className="complete-header">
+            <CheckCircle size={48} className="complete-icon" />
+            <h3>🎉 学习完成！</h3>
+            <p>你已掌握了「{concept}」</p>
+          </div>
 
-      {result && (
-        <div className="result-card explanation">
-          <h3>{result.concept}</h3>
-          <div className="explanation-content">
-            <div className="definition-box">
-              <strong>定义：</strong>
-              <p>{result.definition}</p>
+          <div className="summary-card">
+            <h4>📝 知识总结</h4>
+            
+            <div className="summary-section">
+              <strong>核心要点</strong>
+              <ul>
+                {summary.corePoints?.map((p: string, i: number) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ul>
             </div>
-            <div className="explanation-box">
-              <strong>详细解释：</strong>
-              <p>{result.explanation}</p>
-            </div>
-            {result.analogies?.length > 0 && (
-              <div className="analogies-box">
-                <strong>💡 类比理解</strong>
-                <ul>
-                  {result.analogies.map((a: string, i: number) => (
-                    <li key={i}>{a}</li>
-                  ))}
-                </ul>
+
+            {summary.simpleExplanation && (
+              <div className="summary-section">
+                <strong>简单解释</strong>
+                <p>{summary.simpleExplanation}</p>
               </div>
             )}
-            {result.examples?.length > 0 && (
-              <div className="examples-box">
-                <strong>📝 示例</strong>
-                {result.examples.map((ex: any, i: number) => (
-                  <div key={i} className="example-item">
-                    <p><strong>{ex.title}</strong></p>
-                    <p>{ex.description}</p>
-                    {ex.code && <pre><code>{ex.code}</code></pre>}
-                  </div>
-                ))}
+
+            {summary.analogy && (
+              <div className="summary-section">
+                <strong>生动类比</strong>
+                <p>{summary.analogy}</p>
               </div>
+            )}
+
+            {summary.relatedConcepts?.length > 0 && (
+              <div className="summary-section">
+                <strong>相关概念</strong>
+                <div className="related-tags">
+                  {summary.relatedConcepts.map((c: string, i: number) => (
+                    <span key={i} className="tag">{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mastery-level">
+              <span>掌握程度：</span>
+              <span className={`level ${summary.masteryLevel}`}>
+                {summary.masteryLevel === 'beginner' ? '初学' : 
+                 summary.masteryLevel === 'intermediate' ? '理解' : '掌握'}
+              </span>
+            </div>
+          </div>
+
+          <div className="btn-group">
+            <button className="btn-primary" onClick={handleReset}>
+              学习新概念
+            </button>
+            {summary.notionUrl && (
+              <a href={summary.notionUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+                在Notion中查看
+              </a>
             )}
           </div>
-          {result.notionUrl && (
-            <a href={result.notionUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
-              保存到Notion
-            </a>
-          )}
         </div>
       )}
     </div>
@@ -704,7 +888,7 @@ function StatsPage() {
   if (loading) {
     return (
       <div className="page">
-        <h2>学习统计</h2>
+        <h2>我的知识库</h2>
         <p>加载中...</p>
       </div>
     )
@@ -712,7 +896,7 @@ function StatsPage() {
 
   return (
     <div className="page">
-      <h2>学习统计</h2>
+      <h2>我的知识库</h2>
       
       <div className="stats-grid">
         <div className="stat-card">
