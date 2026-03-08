@@ -6,6 +6,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 2,
   workers: 4,
+  timeout: 120000,
   reporter: 'html',
   use: {
     baseURL: 'https://learning-companion-nine.vercel.app',

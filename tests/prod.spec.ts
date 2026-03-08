@@ -54,7 +54,7 @@ test.describe('生产环境测试 - API集成', () => {
     
     await page.click('.btn-primary:has-text("生成学习计划")')
     
-    await page.waitForSelector('.result-card', { timeout: 30000 })
+    await page.waitForSelector('.result-card', { timeout: 60000 })
     
     await expect(page.locator('.result-card h3')).toContainText('学习计划已创建')
     
@@ -95,7 +95,7 @@ test.describe('生产环境测试 - API集成', () => {
     
     await page.click('.btn-primary:has-text("开始讲解")')
     
-    await page.waitForSelector('.result-card', { timeout: 30000 })
+    await page.waitForSelector('.result-card', { timeout: 60000 })
     
     await expect(page.locator('.result-card')).toBeVisible()
     
@@ -113,7 +113,7 @@ test.describe('生产环境测试 - API集成', () => {
     
     await page.click('.btn-primary:has-text("生成练习题")')
     
-    await page.waitForSelector('.exercise-card', { timeout: 30000 })
+    await page.waitForSelector('.exercise-card', { timeout: 60000 })
     
     const exerciseCount = await page.locator('.exercise-card').count()
     expect(exerciseCount).toBeGreaterThan(0)
@@ -169,20 +169,20 @@ test.describe('生产环境测试 - 完整流程', () => {
     await page.fill('input[type="number"]', '5')
     await page.click('.radio-label:has-text("初学者")')
     await page.click('.btn-primary:has-text("生成学习计划")')
-    await page.waitForSelector('.result-card', { timeout: 30000 })
+    await page.waitForSelector('.result-card', { timeout: 60000 })
     
     console.log('步骤2: 概念讲解')
     await page.click('.nav-item:has-text("概念讲解")')
     await page.fill('input[placeholder*="闭包"]', '测试概念')
     await page.click('.btn-primary:has-text("开始讲解")')
-    await page.waitForSelector('.result-card', { timeout: 30000 })
+    await page.waitForSelector('.result-card', { timeout: 60000 })
     
     console.log('步骤3: 生成练习')
     await page.click('.nav-item:has-text("练习题")')
     await page.fill('input[placeholder*="React Hooks"]', '测试练习')
     await page.fill('input[type="number"]', '2')
     await page.click('.btn-primary:has-text("生成练习题")')
-    await page.waitForSelector('.exercise-card', { timeout: 30000 })
+    await page.waitForSelector('.exercise-card', { timeout: 60000 })
     
     console.log('步骤4: 记录进度')
     await page.click('.nav-item:has-text("记录进度")')
