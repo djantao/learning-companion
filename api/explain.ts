@@ -1,7 +1,7 @@
 import { Client } from '@notionhq/client'
 import { explainConcept } from './deepseek.js'
 
-const notion = new Client({ auth: process.env.NOTION_TOKEN })
+const notion = new Client({ auth: process.env.NOTION_TOKEN }) as any
 
 const DATABASES = {
   plans: '31c3af34-8d57-8189-b341-f97043757be2',
