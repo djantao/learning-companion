@@ -1,5 +1,5 @@
 import { Client } from '@notionhq/client'
-import { explainConcept } from './deepseek'
+import { explainConcept } from './deepseek.js'
 
 const notion = new Client({ auth: process.env.NOTION_TOKEN })
 
