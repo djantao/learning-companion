@@ -1,11 +1,42 @@
-import { useState } from 'react'
-import { BookOpen, Lightbulb, PenTool, BarChart3, Menu, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { BookOpen, Lightbulb, PenTool, BarChart3, Menu, X, ChevronRight, Clock, Target } from 'lucide-react'
 
 type Page = 'home' | 'plan' | 'explain' | 'exercise' | 'progress' | 'stats'
+
+interface WeeklySchedule {
+  week: number
+  theme: string
+  objectives: string[]
+  resources: string[]
+  exercises: string[]
+  estimatedHours: number
+}
+
+interface LearningPlan {
+  planId: string
+  topic: string
+  totalWeeks: number
+  weeklySchedule: WeeklySchedule[]
+  milestones: any[]
+  notionUrl: string
+}
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [currentPlan, setCurrentPlan] = useState<LearningPlan | null>(null)
+
+  useEffect(() => {
+    const savedPlan = localStorage.getItem('currentPlan')
+    if (savedPlan) {
+      setCurrentPlan(JSON.parse(savedPlan))
+    }
+  }, [])
+
+  const savePlan = (plan: LearningPlan) => {
+    setCurrentPlan(plan)
+    localStorage.setItem('currentPlan', JSON.stringify(plan))
+  }
 
   const navItems = [
     { id: 'home' as Page, label: '首页', icon: BookOpen },
@@ -46,10 +77,10 @@ function App() {
       </nav>
 
       <main className="main">
-        {currentPage === 'home' && <HomePage onNavigate={setCurrentPage} />}
-        {currentPage === 'plan' && <PlanPage />}
-        {currentPage === 'explain' && <ExplainPage />}
-        {currentPage === 'exercise' && <ExercisePage />}
+        {currentPage === 'home' && <HomePage onNavigate={setCurrentPage} currentPlan={currentPlan} />}
+        {currentPage === 'plan' && <PlanPage onSavePlan={savePlan} currentPlan={currentPlan} />}
+        {currentPage === 'explain' && <ExplainPage currentPlan={currentPlan} />}
+        {currentPage === 'exercise' && <ExercisePage currentPlan={currentPlan} />}
         {currentPage === 'progress' && <ProgressPage />}
         {currentPage === 'stats' && <StatsPage />}
       </main>
@@ -61,7 +92,7 @@ function App() {
   )
 }
 
-function HomePage({ onNavigate }: { onNavigate: (page: Page) => void }) {
+function HomePage({ onNavigate, currentPlan }: { onNavigate: (page: Page) => void; currentPlan: LearningPlan | null }) {
   const features = [
     { icon: BookOpen, title: '创建学习计划', desc: '输入学习目标，AI生成个性化计划', page: 'plan' as Page },
     { icon: Lightbulb, title: '概念讲解', desc: '不懂就问，AI详细讲解知识点', page: 'explain' as Page },
@@ -75,6 +106,22 @@ function HomePage({ onNavigate }: { onNavigate: (page: Page) => void }) {
         <h2>你的智能学习助手</h2>
         <p>AI驱动的个性化学习，数据存储在Notion，手机电脑都能访问</p>
       </div>
+
+      {currentPlan && (
+        <div className="current-plan-card">
+          <h3>📋 当前学习计划</h3>
+          <div className="plan-summary">
+            <div className="plan-topic">{currentPlan.topic}</div>
+            <div className="plan-meta">
+              <span><Clock size={16} /> {currentPlan.totalWeeks}周</span>
+              <span><Target size={16} /> {currentPlan.weeklySchedule?.length || 0}个学习单元</span>
+            </div>
+          </div>
+          <button className="btn-primary" onClick={() => onNavigate('plan')}>
+            查看完整计划 <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
 
       <div className="features">
         {features.map((feature, index) => (
@@ -97,12 +144,13 @@ function HomePage({ onNavigate }: { onNavigate: (page: Page) => void }) {
   )
 }
 
-function PlanPage() {
+function PlanPage({ onSavePlan, currentPlan }: { onSavePlan: (plan: LearningPlan) => void; currentPlan: LearningPlan | null }) {
   const [topic, setTopic] = useState('')
   const [hoursPerWeek, setHoursPerWeek] = useState(10)
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<LearningPlan | null>(currentPlan)
+  const [expandedWeek, setExpandedWeek] = useState<number | null>(null)
 
   const handleCreatePlan = async () => {
     if (!topic.trim()) return
@@ -115,7 +163,16 @@ function PlanPage() {
         body: JSON.stringify({ topic, hoursPerWeek, level })
       })
       const data = await response.json()
-      setResult(data)
+      const plan: LearningPlan = {
+        planId: data.planId,
+        topic: data.topic,
+        totalWeeks: data.totalWeeks,
+        weeklySchedule: data.weeklySchedule || [],
+        milestones: data.milestones || [],
+        notionUrl: data.notionUrl
+      }
+      setResult(plan)
+      onSavePlan(plan)
     } catch (error) {
       console.error(error)
     } finally {
@@ -179,10 +236,69 @@ function PlanPage() {
       </button>
 
       {result && (
-        <div className="result-card">
-          <h3>学习计划已创建！</h3>
-          <p><strong>主题：</strong>{result.topic}</p>
-          <p><strong>周期：</strong>{result.totalWeeks}周</p>
+        <div className="result-card plan-result">
+          <h3>📚 {result.topic} 学习计划</h3>
+          <div className="plan-overview">
+            <div className="overview-item">
+              <span className="overview-value">{result.totalWeeks}</span>
+              <span className="overview-label">周</span>
+            </div>
+            <div className="overview-item">
+              <span className="overview-value">{result.weeklySchedule?.length || 0}</span>
+              <span className="overview-label">学习单元</span>
+            </div>
+          </div>
+
+          {result.weeklySchedule && result.weeklySchedule.length > 0 && (
+            <div className="weekly-schedule">
+              <h4>📅 学习安排</h4>
+              {result.weeklySchedule.map((week, index) => (
+                <div key={index} className="week-item">
+                  <div 
+                    className="week-header"
+                    onClick={() => setExpandedWeek(expandedWeek === index ? null : index)}
+                  >
+                    <span className="week-number">第{week.week}周</span>
+                    <span className="week-theme">{week.theme}</span>
+                    <span className="week-hours">{week.estimatedHours}小时</span>
+                    <ChevronRight 
+                      size={20} 
+                      className={expandedWeek === index ? 'expanded' : ''} 
+                    />
+                  </div>
+                  {expandedWeek === index && (
+                    <div className="week-details">
+                      <div className="detail-section">
+                        <strong>🎯 学习目标</strong>
+                        <ul>
+                          {week.objectives?.map((obj, i) => (
+                            <li key={i}>{obj}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="detail-section">
+                        <strong>📖 学习资源</strong>
+                        <ul>
+                          {week.resources?.map((res, i) => (
+                            <li key={i}>{res}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="detail-section">
+                        <strong>✏️ 练习任务</strong>
+                        <ul>
+                          {week.exercises?.map((ex, i) => (
+                            <li key={i}>{ex}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {result.notionUrl && (
             <a href={result.notionUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
               在Notion中查看
@@ -194,22 +310,31 @@ function PlanPage() {
   )
 }
 
-function ExplainPage() {
+function ExplainPage({ currentPlan }: { currentPlan: LearningPlan | null }) {
   const [concept, setConcept] = useState('')
   const [context, setContext] = useState('')
   const [style, setStyle] = useState<'simple' | 'detailed' | 'analogy'>('simple')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
 
-  const handleExplain = async () => {
-    if (!concept.trim()) return
+  const suggestedConcepts = currentPlan?.weeklySchedule?.flatMap(week => 
+    week.objectives?.slice(0, 2) || []
+  ).slice(0, 5) || []
+
+  const handleExplain = async (conceptToExplain?: string) => {
+    const targetConcept = conceptToExplain || concept
+    if (!targetConcept.trim()) return
     
     setLoading(true)
     try {
       const response = await fetch('/api/explain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ concept, context, style })
+        body: JSON.stringify({ 
+          concept: targetConcept, 
+          context: context || currentPlan?.topic || '', 
+          style 
+        })
       })
       const data = await response.json()
       setResult(data)
@@ -223,6 +348,23 @@ function ExplainPage() {
   return (
     <div className="page">
       <h2>概念讲解</h2>
+
+      {currentPlan && suggestedConcepts.length > 0 && (
+        <div className="suggested-section">
+          <h4>📌 根据你的学习计划推荐</h4>
+          <div className="suggested-concepts">
+            {suggestedConcepts.map((concept, i) => (
+              <button 
+                key={i} 
+                className="concept-chip"
+                onClick={() => handleExplain(concept)}
+              >
+                {concept}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="form-group">
         <label>想了解的概念</label>
@@ -240,7 +382,7 @@ function ExplainPage() {
           type="text"
           value={context}
           onChange={(e) => setContext(e.target.value)}
-          placeholder="例如：JavaScript、数据结构"
+          placeholder={currentPlan ? `当前学习：${currentPlan.topic}` : "例如：JavaScript、数据结构"}
         />
       </div>
 
@@ -268,7 +410,7 @@ function ExplainPage() {
 
       <button 
         className="btn-primary" 
-        onClick={handleExplain}
+        onClick={() => handleExplain()}
         disabled={loading || !concept.trim()}
       >
         {loading ? '讲解中...' : '开始讲解'}
@@ -278,17 +420,35 @@ function ExplainPage() {
         <div className="result-card explanation">
           <h3>{result.concept}</h3>
           <div className="explanation-content">
-            <p>{result.definition}</p>
-            <p>{result.explanation}</p>
+            <div className="definition-box">
+              <strong>定义：</strong>
+              <p>{result.definition}</p>
+            </div>
+            <div className="explanation-box">
+              <strong>详细解释：</strong>
+              <p>{result.explanation}</p>
+            </div>
             {result.analogies?.length > 0 && (
-              <>
-                <h4>类比理解</h4>
+              <div className="analogies-box">
+                <strong>💡 类比理解</strong>
                 <ul>
                   {result.analogies.map((a: string, i: number) => (
                     <li key={i}>{a}</li>
                   ))}
                 </ul>
-              </>
+              </div>
+            )}
+            {result.examples?.length > 0 && (
+              <div className="examples-box">
+                <strong>📝 示例</strong>
+                {result.examples.map((ex: any, i: number) => (
+                  <div key={i} className="example-item">
+                    <p><strong>{ex.title}</strong></p>
+                    <p>{ex.description}</p>
+                    {ex.code && <pre><code>{ex.code}</code></pre>}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           {result.notionUrl && (
@@ -302,8 +462,8 @@ function ExplainPage() {
   )
 }
 
-function ExercisePage() {
-  const [topic, setTopic] = useState('')
+function ExercisePage({ currentPlan }: { currentPlan: LearningPlan | null }) {
+  const [topic, setTopic] = useState(currentPlan?.topic || '')
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium')
   const [count, setCount] = useState(5)
   const [loading, setLoading] = useState(false)
@@ -331,6 +491,12 @@ function ExercisePage() {
   return (
     <div className="page">
       <h2>生成练习题</h2>
+
+      {currentPlan && (
+        <div className="current-plan-hint">
+          <p>📖 当前学习：<strong>{currentPlan.topic}</strong></p>
+        </div>
+      )}
       
       <div className="form-group">
         <label>练习主题</label>
@@ -402,7 +568,7 @@ function ExercisePage() {
               <details>
                 <summary>查看答案</summary>
                 <div className="answer">
-                  <p>{ex.correct_answer}</p>
+                  <p>{ex.correct_answer || ex.correctAnswer}</p>
                   <p className="explanation">{ex.explanation}</p>
                 </div>
               </details>
@@ -520,7 +686,7 @@ function StatsPage() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  useState(() => {
+  useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await fetch('/api/stats')
@@ -533,7 +699,7 @@ function StatsPage() {
       }
     }
     fetchStats()
-  })
+  }, [])
 
   if (loading) {
     return (
