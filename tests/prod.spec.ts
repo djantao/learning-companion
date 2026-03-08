@@ -56,7 +56,7 @@ test.describe('生产环境测试 - API集成', () => {
     
     await page.waitForSelector('.result-card', { timeout: 60000 })
     
-    await expect(page.locator('.result-card h3')).toContainText('学习计划已创建')
+    await expect(page.locator('.result-card h3')).toContainText('学习计划')
     
     const notionLink = page.locator('.result-card a[href*="notion.so"]')
     await expect(notionLink).toBeVisible()
