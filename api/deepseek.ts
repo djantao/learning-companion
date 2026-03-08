@@ -27,7 +27,7 @@ function getHeaders() {
 }
 
 export async function generateLearningPlan(topic: string, level: string, hoursPerWeek: number) {
-  const prompt = `你是一个专业的学习规划师。请为以下学习需求制定一个详细的学习计划：
+  const prompt = `请用中文回答。你是一个专业的学习规划师。请为以下学习需求制定一个详细的学习计划：
 
 学习主题：${topic}
 当前水平：${level}
@@ -87,14 +87,14 @@ export async function generateLearningPlan(topic: string, level: string, hoursPe
 }
 
 export async function explainConcept(concept: string, context: string, style: string) {
-  const stylePrompts = {
+  const stylePrompts: Record<string, string> = {
     simple: '用简单易懂的语言解释，适合初学者理解。',
     detailed: '用详细专业的方式解释，包含技术细节和原理。',
     analogy: '用生动的类比和比喻来解释，帮助理解抽象概念。',
     code_focused: '用代码示例来解释，重点展示实际应用。'
   }
 
-  const prompt = `你是一个专业的知识讲解师。请${stylePrompts[style] || stylePrompts.simple}
+  const prompt = `请用中文回答。你是一个专业的知识讲解师。请${stylePrompts[style] || stylePrompts.simple}
 
 概念：${concept}
 背景：${context || '通用'}
@@ -154,13 +154,13 @@ export async function explainConcept(concept: string, context: string, style: st
 }
 
 export async function generateExercises(topic: string, difficulty: string, count: number) {
-  const difficultyDesc = {
+  const difficultyDesc: Record<string, string> = {
     easy: '基础概念理解，适合初学者',
     medium: '中等难度，需要一定理解和应用能力',
     hard: '高级难度，需要深入理解和综合应用'
   }
 
-  const prompt = `你是一个专业的练习题生成器。请生成${count}道关于"${topic}"的练习题。
+  const prompt = `请用中文回答。你是一个专业的练习题生成器。请生成${count}道关于"${topic}"的练习题。
 
 难度：${difficultyDesc[difficulty] || difficultyDesc.medium}
 
