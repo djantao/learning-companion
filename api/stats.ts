@@ -13,11 +13,11 @@ export default async function handler(req, res) {
   try {
     const progressResponse = await notion.databases.query({
       database_id: DATABASES.progress
-    })
+    } as any)
 
     const exercisesResponse = await notion.databases.query({
       database_id: DATABASES.exercises
-    })
+    } as any)
 
     let totalTime = 0
     const uniqueDays = new Set()
