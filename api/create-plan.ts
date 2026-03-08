@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       }
     }
     
-    const response = await notion.pages.create({
+    const planResponse = await notion.pages.create({
       parent: { database_id: DATABASES.plans },
       properties: {
         '主题': { title: [{ text: { content: topic } }] },
@@ -42,13 +42,27 @@ export default async function handler(req, res) {
       }
     })
 
+    if (planData.weeklySchedule && planData.weeklySchedule.length > 0) {
+      for (const week of planData.weeklySchedule) {
+        await notion.pages.create({
+          parent: { database_id: DATABASES.notes },
+          properties: {
+            '标题': { title: [{ text: { content: `第${week.week}周 - ${week.theme}` } }] },
+            '类型': { select: { name: '学习计划' } },
+            '创建日期': { date: { start: new Date().toISOString().split('T')[0] } },
+            '标签': { multi_select: [{ name: topic }, { name: `第${week.week}周` }] }
+          }
+        } as any)
+      }
+    }
+
     res.json({
       success: true,
-      planId: response.id,
+      planId: planResponse.id,
       topic,
       totalWeeks: planData.totalWeeks,
       weeklySchedule: planData.weeklySchedule,
-      notionUrl: `https://www.notion.so/${response.id.replace(/-/g, '')}`
+      notionUrl: `https://www.notion.so/${planResponse.id.replace(/-/g, '')}`
     })
   } catch (error) {
     console.error('Create plan error:', error)

@@ -34,20 +34,25 @@ export default async function handler(req, res) {
       }))
     }
     
-    const response = await notion.pages.create({
-      parent: { database_id: DATABASES.exercises },
-      properties: {
-        '练习主题': { title: [{ text: { content: `${topic} - 练习题` } }] },
-        '难度': { select: { name: difficulty || 'medium' } },
-        '创建日期': { date: { start: new Date().toISOString().split('T')[0] } },
-        '完成状态': { select: { name: '未开始' } }
-      }
-    })
+    for (const exercise of exercises) {
+      const exerciseTitle = `${topic} - 练习${exercise.id || exercises.indexOf(exercise) + 1}`
+      
+      await notion.pages.create({
+        parent: { database_id: DATABASES.exercises },
+        properties: {
+          '练习主题': { title: [{ text: { content: exerciseTitle } }] },
+          '难度': { select: { name: difficulty || 'medium' } },
+          '创建日期': { date: { start: new Date().toISOString().split('T')[0] } },
+          '完成状态': { select: { name: '未开始' } }
+        }
+      } as any)
+    }
 
     res.json({
       success: true,
       exercises,
-      notionUrl: `https://www.notion.so/${response.id.replace(/-/g, '')}`
+      count: exercises.length,
+      notionUrl: `https://www.notion.so/${DATABASES.exercises.replace(/-/g, '')}`
     })
   } catch (error) {
     console.error('Exercises error:', error)
